@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run JLox with file" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.puritylake.lox.Lox" />
+    <module name="JLox" />
+    <option name="PROGRAM_PARAMETERS" value="test.lox" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
