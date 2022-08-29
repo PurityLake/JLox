@@ -73,9 +73,20 @@ public class Parser {
     }
 
     private Expr comma() {
-        Expr expr = equality();
+        Expr expr = ternary();
         while (match(COMMA)) {
-            expr = new Expr.CommaGroup(expr, equality());
+            expr = new Expr.CommaGroup(expr, ternary());
+        }
+        return expr;
+    }
+
+    private Expr ternary() {
+        Expr expr = equality();
+        if (match(QUESTION)) {
+            Expr trueVal = equality();
+            consume(COLON, "Expected ': in ternary");
+            Expr falseVal = equality();
+            return new Expr.Ternary(expr, trueVal, falseVal);
         }
         return expr;
     }
@@ -151,6 +162,12 @@ public class Parser {
             Expr expr = expression();
             consume(RIGHT_PAREN, "Expect ')' after expression.");
             return new Expr.Grouping(expr);
+        }
+
+        Token tok = advance();
+        if (tok.isBinaryOp() && !tok.isUnaryOp()) {
+            advance();
+            throw error(peek(), "Binary operator expects left operand");
         }
 
         throw error(peek(), "Expected expression.");

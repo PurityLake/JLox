@@ -19,7 +19,8 @@ public class GenerateAST {
                 "Grouping   : Expr expression",
                 "Literal    : Object value",
                 "Unary      : Token operator, Expr right",
-                "CommaGroup : Expr left, Expr right"
+                "CommaGroup : Expr left, Expr right",
+                "Ternary    : Expr cond, Expr trueVal, Expr falseVal"
         ));
     }
 

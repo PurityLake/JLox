@@ -13,6 +13,7 @@ public abstract class Expr {
         R visitLiteralExpr(Literal expr);
         R visitUnaryExpr(Unary expr);
         R visitCommaGroupExpr(CommaGroup expr);
+        R visitTernaryExpr(Ternary expr);
     }
     public static class Binary extends Expr {
        public Binary(Expr left, Token operator, Expr right) {
@@ -81,6 +82,22 @@ public abstract class Expr {
 
         final Expr left;
         final Expr right;
+    }
+    public static class Ternary extends Expr {
+       public Ternary(Expr cond, Expr trueVal, Expr falseVal) {
+            this.cond = cond;
+            this.trueVal = trueVal;
+            this.falseVal = falseVal;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitTernaryExpr(this);
+        }
+
+        final Expr cond;
+        final Expr trueVal;
+        final Expr falseVal;
     }
 
     public abstract <R> R accept(Visitor<R> visitor);
