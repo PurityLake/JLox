@@ -69,7 +69,15 @@ public class Parser {
     }
 
     private Expr expression() {
-        return equality();
+        return comma();
+    }
+
+    private Expr comma() {
+        Expr expr = equality();
+        while (match(COMMA)) {
+            expr = new Expr.CommaGroup(expr, equality());
+        }
+        return expr;
     }
 
     private Expr equality() {
@@ -141,7 +149,7 @@ public class Parser {
 
         if (match(LEFT_PAREN)) {
             Expr expr = expression();
-            consume(RIGHT_PAREN, "£xpect ')' after expression.");
+            consume(RIGHT_PAREN, "Expect ')' after expression.");
             return new Expr.Grouping(expr);
         }
 

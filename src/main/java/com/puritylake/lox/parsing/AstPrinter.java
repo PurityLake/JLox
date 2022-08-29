@@ -25,6 +25,11 @@ public class AstPrinter implements Expr.Visitor<String> {
         return parenthesize(expr.operator.lexeme(), expr.right);
     }
 
+    @Override
+    public String visitCommaGroupExpr(Expr.CommaGroup expr) {
+        return parenthesize("comma", expr.left, expr.right);
+    }
+
     private String parenthesize(String name, Expr... exprs) {
         StringBuilder builder = new StringBuilder();
 
