@@ -1,11 +1,13 @@
-package com.puritylake.lox;
+package com.puritylake.lox.parsing;
+
+import com.puritylake.lox.Lox;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.puritylake.lox.TokenType.*;
+import static com.puritylake.lox.parsing.TokenType.*;
 
 public class Scanner {
     private final String source;

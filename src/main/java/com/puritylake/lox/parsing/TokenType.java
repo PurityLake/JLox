@@ -1,4 +1,4 @@
-package com.puritylake.lox;
+package com.puritylake.lox.parsing;
 
 public enum TokenType {
     // Single-character tokens.
