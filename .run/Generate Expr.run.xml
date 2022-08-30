@@ -3,6 +3,8 @@
     <option name="MAIN_CLASS_NAME" value="com.puritylake.tool.GenerateAST" />
     <module name="JLox" />
     <option name="PROGRAM_PARAMETERS" value="src/main/java/com/puritylake/lox/parsing" />
-    <method v="2" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
   </configuration>
 </component>

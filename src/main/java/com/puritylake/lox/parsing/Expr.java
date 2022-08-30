@@ -14,6 +14,7 @@ public abstract class Expr {
         R visitUnaryExpr(Unary expr);
         R visitCommaGroupExpr(CommaGroup expr);
         R visitTernaryExpr(Ternary expr);
+        R visitVariableExpr(Variable expr);
     }
     public static class Binary extends Expr {
        public Binary(Expr left, Token operator, Expr right) {
@@ -98,6 +99,18 @@ public abstract class Expr {
         final Expr cond;
         final Expr trueVal;
         final Expr falseVal;
+    }
+    public static class Variable extends Expr {
+       public Variable(Token name) {
+            this.name = name;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitVariableExpr(this);
+        }
+
+        final Token name;
     }
 
     public abstract <R> R accept(Visitor<R> visitor);
