@@ -2,14 +2,22 @@ package com.puritylake.lox.parsing;
 
 import com.puritylake.lox.Lox;
 
-public class Interpreter implements Expr.Visitor<Object> {
-    public void interpret(Expr expression) {
+import java.util.List;
+
+public class Interpreter implements Expr.Visitor<Object>,
+                                    Stmt.Visitor<Void> {
+    public void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
+    }
+
+    private void execute(Stmt stmt) {
+        stmt.accept(this);
     }
 
     private String stringify(Object object) {
@@ -146,11 +154,29 @@ public class Interpreter implements Expr.Visitor<Object> {
 
     @Override
     public Object visitCommaGroupExpr(Expr.CommaGroup expr) {
+        evaluate(expr.left);
+        evaluate(expr.right);
         return null;
     }
 
     @Override
     public Object visitTernaryExpr(Expr.Ternary expr) {
+        if (isTruthy(evaluate(expr.cond))) {
+            return evaluate(expr.trueVal);
+        }
+        return evaluate(expr.falseVal);
+    }
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
         return null;
     }
 }
