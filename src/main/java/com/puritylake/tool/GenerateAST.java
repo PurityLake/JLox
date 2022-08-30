@@ -22,6 +22,11 @@ public class GenerateAST {
                 "CommaGroup : Expr left, Expr right",
                 "Ternary    : Expr cond, Expr trueVal, Expr falseVal"
         ));
+
+        defineAst(outputDir, "Stmt", Arrays.asList(
+                "Expression : Expr expression",
+                "Print      : Expr expression"
+        ));
     }
 
     private static void defineAst(
