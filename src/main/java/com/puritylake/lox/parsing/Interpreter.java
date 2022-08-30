@@ -65,6 +65,11 @@ public class Interpreter implements Expr.Visitor<Object> {
             }
             case SLASH -> {
                 checkNumberOperands(expr.operator, left, right);
+                double r = (double) right;
+                if (r == 0) {
+                    throw new RuntimeError(expr.operator,
+                            "Cannot divide by zero.");
+                }
                 return (double) left / (double) right;
             }
             case STAR  -> {
@@ -72,11 +77,15 @@ public class Interpreter implements Expr.Visitor<Object> {
                 return (double) left * (double) right;
             }
             case PLUS  -> {
-                if (left instanceof Double && right instanceof Double) {
-                    return (double)left + (double)right;
+                if (left instanceof Double) {
+                    if (right instanceof Double) {
+                        return (double) left + (double) right;
+                    } else if (right instanceof String) {
+                        return stringify(left) + right;
+                    }
                 }
-                if (left instanceof String && right instanceof String) {
-                    return (String)left + (String)right;
+                if (left instanceof String) {
+                    return left + stringify(right);
                 }
                 throw new RuntimeError(expr.operator,
                         "Operands must be two number or two strings");
