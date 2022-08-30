@@ -26,6 +26,7 @@ public class GenerateAST {
         ));
 
         defineAst(outputDir, "Stmt", Arrays.asList(
+                "Block      : List<Stmt> statements",
                 "Expression : Expr expression",
                 "Print      : Expr expression",
                 "Var        : Token name, Expr initializer"
@@ -45,6 +46,8 @@ public class GenerateAST {
         writer.println("// ###################################################");
         writer.println();
         writer.println("package com.puritylake.lox.parsing;");
+        writer.println();
+        writer.println("import java.util.List;");
         writer.println();
         writer.println("public abstract class " + baseName + " {");
 
