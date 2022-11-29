@@ -6,14 +6,30 @@
 
 package com.puritylake.lox.parsing;
 
+import com.puritylake.lox.exceptions.*;
+
 import java.util.List;
 
 public abstract class Stmt {
     public interface Visitor<R> {
-        R visitBlockStmt(Block stmt);
-        R visitExpressionStmt(Expression stmt);
-        R visitPrintStmt(Print stmt);
-        R visitVarStmt(Var stmt);
+        R visitBlockStmt(Block stmt) throws Exception;
+;
+        R visitExpressionStmt(Expression stmt) throws Exception;
+;
+        R visitIfStmt(If stmt) throws Exception;
+;
+        R visitPrintStmt(Print stmt) throws Exception;
+;
+        R visitVarStmt(Var stmt) throws Exception;
+;
+        R visitWhileStmt(While stmt) throws Exception;
+;
+        R visitForStmt(For stmt) throws Exception;
+;
+        R visitBreakStmt(Break stmt) throws ControlFlowException;
+;
+        R visitContinueStmt(Continue stmt) throws ControlFlowException;
+;
     }
     public static class Block extends Stmt {
        public Block(List<Stmt> statements) {
@@ -21,7 +37,7 @@ public abstract class Stmt {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitBlockStmt(this);
         }
 
@@ -33,11 +49,27 @@ public abstract class Stmt {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitExpressionStmt(this);
         }
 
         final Expr expression;
+    }
+    public static class If extends Stmt {
+       public If(Expr condition, Stmt thenBranch, Stmt elseBranch) {
+            this.condition = condition;
+            this.thenBranch = thenBranch;
+            this.elseBranch = elseBranch;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitIfStmt(this);
+        }
+
+        final Expr condition;
+        final Stmt thenBranch;
+        final Stmt elseBranch;
     }
     public static class Print extends Stmt {
        public Print(Expr expression) {
@@ -45,7 +77,7 @@ public abstract class Stmt {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitPrintStmt(this);
         }
 
@@ -59,7 +91,7 @@ public abstract class Stmt {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitVarStmt(this);
         }
 
@@ -67,6 +99,62 @@ public abstract class Stmt {
         final Expr initializer;
         final boolean initialized;
     }
+    public static class While extends Stmt {
+       public While(Expr condition, Stmt body) {
+            this.condition = condition;
+            this.body = body;
+        }
 
-    public abstract <R> R accept(Visitor<R> visitor);
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitWhileStmt(this);
+        }
+
+        final Expr condition;
+        final Stmt body;
+    }
+    public static class For extends Stmt {
+       public For(Stmt init, Expr cond, Expr post, Stmt body) {
+            this.init = init;
+            this.cond = cond;
+            this.post = post;
+            this.body = body;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitForStmt(this);
+        }
+
+        final Stmt init;
+        final Expr cond;
+        final Expr post;
+        final Stmt body;
+    }
+    public static class Break extends Stmt {
+       public Break(Token name) {
+            this.name = name;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws ControlFlowException {
+            return visitor.visitBreakStmt(this);
+        }
+
+        final Token name;
+    }
+    public static class Continue extends Stmt {
+       public Continue(Token name) {
+            this.name = name;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws ControlFlowException {
+            return visitor.visitContinueStmt(this);
+        }
+
+        final Token name;
+    }
+
+    public abstract <R> R accept(Visitor<R> visitor) throws Exception;
 }

@@ -2,6 +2,7 @@ package com.puritylake.lox.parsing;
 
 import com.puritylake.lox.Environment;
 import com.puritylake.lox.Lox;
+import com.puritylake.lox.exceptions.ControlFlowException;
 
 import java.util.List;
 
@@ -9,7 +10,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     private Environment environment = new Environment();
 
-    public void interpret(List<Stmt> statements) {
+    public void interpret(List<Stmt> statements) throws Exception {
         try {
             for (Stmt statement : statements) {
                 execute(statement);
@@ -19,7 +20,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
     }
 
-    private void execute(Stmt stmt) {
+    private void execute(Stmt stmt) throws Exception {
         stmt.accept(this);
     }
 
@@ -37,7 +38,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return object.toString();
     }
 
-    private Object evaluate(Expr expr) {
+    private Object evaluate(Expr expr) throws Exception {
         return expr.accept(this);
     }
 
@@ -64,7 +65,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         throw new RuntimeError(operator, "Operands must be numbers");
     }
 
-    private void executeBlock(List<Stmt> statements, Environment environment) {
+    private void executeBlock(List<Stmt> statements, Environment environment) throws Exception {
         Environment previous = this.environment;
         try {
             this.environment = environment;
@@ -78,14 +79,14 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitAssignExpr(Expr.Assign expr) {
+    public Object visitAssignExpr(Expr.Assign expr) throws Exception {
         Object value = evaluate(expr.value);
         environment.assign(expr.name, value);
         return value;
     }
 
     @Override
-    public Object visitBinaryExpr(Expr.Binary expr) {
+    public Object visitBinaryExpr(Expr.Binary expr) throws Exception {
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
 
@@ -149,7 +150,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitGroupingExpr(Expr.Grouping expr) {
+    public Object visitGroupingExpr(Expr.Grouping expr) throws Exception {
         return evaluate(expr.expression);
     }
 
@@ -159,7 +160,20 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitUnaryExpr(Expr.Unary expr) {
+    public Object visitLogicalExpr(Expr.Logical expr) throws Exception {
+        Object left = evaluate(expr.left);
+
+        if (expr.operator.type() == TokenType.OR) {
+            if (isTruthy(left)) return left;
+        } else {
+            if (!isTruthy(left))return left;
+        }
+
+        return evaluate(expr.right);
+    }
+
+    @Override
+    public Object visitUnaryExpr(Expr.Unary expr) throws Exception {
         Object right = evaluate(expr.right);
 
         switch (expr.operator.type()) {
@@ -176,14 +190,14 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitCommaGroupExpr(Expr.CommaGroup expr) {
+    public Object visitCommaGroupExpr(Expr.CommaGroup expr) throws Exception {
         evaluate(expr.left);
         evaluate(expr.right);
         return null;
     }
 
     @Override
-    public Object visitTernaryExpr(Expr.Ternary expr) {
+    public Object visitTernaryExpr(Expr.Ternary expr) throws Exception {
         if (isTruthy(evaluate(expr.cond))) {
             return evaluate(expr.trueVal);
         }
@@ -196,26 +210,36 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitBlockStmt(Stmt.Block stmt) {
+    public Void visitBlockStmt(Stmt.Block stmt) throws Exception {
         executeBlock(stmt.statements, new Environment(environment));
         return null;
     }
 
     @Override
-    public Void visitExpressionStmt(Stmt.Expression stmt) {
-        System.out.println(stringify(evaluate(stmt.expression)));
+    public Void visitExpressionStmt(Stmt.Expression stmt) throws Exception {
+        evaluate(stmt.expression);
         return null;
     }
 
     @Override
-    public Void visitPrintStmt(Stmt.Print stmt) {
+    public Void visitIfStmt(Stmt.If stmt) throws Exception {
+        if (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.thenBranch);
+        } else if (stmt.elseBranch != null) {
+            execute(stmt.elseBranch);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) throws Exception {
         Object value = evaluate(stmt.expression);
         System.out.println(stringify(value));
         return null;
     }
 
     @Override
-    public Void visitVarStmt(Stmt.Var stmt) {
+    public Void visitVarStmt(Stmt.Var stmt) throws Exception {
         Object value = null;
         if (stmt.initializer != null) {
             value = evaluate(stmt.initializer);
@@ -223,5 +247,55 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         environment.define(stmt.name.lexeme(), value, stmt.initialized);
         return null;
+    }
+
+    @Override
+    public Void visitWhileStmt(Stmt.While stmt) throws Exception {
+        while (isTruthy(evaluate(stmt.condition))) {
+            try {
+                execute(stmt.body);
+            } catch (ControlFlowException cfe) {
+                if (cfe.isBreak) {
+                    break;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitForStmt(Stmt.For stmt) throws Exception {
+        boolean hasInit = stmt.init != null;
+        boolean hasCond = stmt.cond != null;
+        boolean hasPost = stmt.post != null;
+
+        if (hasInit) {
+            execute(stmt.init);
+        }
+
+        while (!hasCond || isTruthy(evaluate(stmt.cond))) {
+            try {
+                execute(stmt.body);
+            } catch (ControlFlowException cfe) {
+                if (cfe.isBreak) {
+                    break;
+                }
+            }
+            if (hasPost) {
+                evaluate(stmt.post);
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void visitBreakStmt(Stmt.Break stmt) throws ControlFlowException {
+        throw new ControlFlowException(true);
+    }
+
+    @Override
+    public Void visitContinueStmt(Stmt.Continue stmt) throws ControlFlowException {
+        throw new ControlFlowException(false);
     }
 }

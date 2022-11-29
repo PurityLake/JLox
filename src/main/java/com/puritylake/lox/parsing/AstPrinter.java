@@ -1,22 +1,22 @@
 package com.puritylake.lox.parsing;
 
 public class AstPrinter implements Expr.Visitor<String> {
-    public String print(Expr expr) {
+    public String print(Expr expr) throws Exception {
         return expr.accept(this);
     }
 
     @Override
-    public String visitAssignExpr(Expr.Assign expr) {
+    public String visitAssignExpr(Expr.Assign expr) throws Exception {
         return null;
     }
 
     @Override
-    public String visitBinaryExpr(Expr.Binary expr) {
+    public String visitBinaryExpr(Expr.Binary expr) throws Exception {
         return parenthesize(expr.operator.lexeme(), expr.left, expr.right);
     }
 
     @Override
-    public String visitGroupingExpr(Expr.Grouping expr) {
+    public String visitGroupingExpr(Expr.Grouping expr) throws Exception {
         return parenthesize("group", expr.expression);
     }
 
@@ -27,17 +27,22 @@ public class AstPrinter implements Expr.Visitor<String> {
     }
 
     @Override
-    public String visitUnaryExpr(Expr.Unary expr) {
+    public String visitLogicalExpr(Expr.Logical expr) throws Exception {
+        return parenthesize("logical", expr.left, expr.right);
+    }
+
+    @Override
+    public String visitUnaryExpr(Expr.Unary expr) throws Exception {
         return parenthesize(expr.operator.lexeme(), expr.right);
     }
 
     @Override
-    public String visitCommaGroupExpr(Expr.CommaGroup expr) {
+    public String visitCommaGroupExpr(Expr.CommaGroup expr) throws Exception {
         return parenthesize("comma", expr.left, expr.right);
     }
 
     @Override
-    public String visitTernaryExpr(Expr.Ternary expr) {
+    public String visitTernaryExpr(Expr.Ternary expr) throws Exception {
         return parenthesize("ternary", expr.cond, expr.trueVal, expr.falseVal);
     }
 
@@ -46,7 +51,7 @@ public class AstPrinter implements Expr.Visitor<String> {
         return null;
     }
 
-    private String parenthesize(String name, Expr... exprs) {
+    private String parenthesize(String name, Expr... exprs) throws Exception {
         StringBuilder builder = new StringBuilder();
 
         builder.append("(").append(name);

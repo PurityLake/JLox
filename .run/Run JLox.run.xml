@@ -2,6 +2,7 @@
   <configuration default="false" name="Run JLox" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="com.puritylake.lox.Lox" />
     <module name="JLox" />
+    <option name="WORKING_DIRECTORY" value="$ProjectFileDir$" />
     <method v="2">
       <option name="Make" enabled="true" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="Generate Expr" run_configuration_type="Application" />

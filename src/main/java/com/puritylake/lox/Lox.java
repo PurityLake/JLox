@@ -55,8 +55,11 @@ public class Lox {
 
         if (hadError) return;
         if (hadRuntimeError) return;
-
-        interpreter.interpret(statements);
+        try {
+            interpreter.interpret(statements);
+        } catch (Exception e) {
+            return;
+        }
     }
 
     public static void error(int line, String message) {

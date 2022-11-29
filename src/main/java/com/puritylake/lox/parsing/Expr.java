@@ -6,18 +6,30 @@
 
 package com.puritylake.lox.parsing;
 
+import com.puritylake.lox.exceptions.*;
+
 import java.util.List;
 
 public abstract class Expr {
     public interface Visitor<R> {
-        R visitAssignExpr(Assign expr);
-        R visitBinaryExpr(Binary expr);
-        R visitGroupingExpr(Grouping expr);
-        R visitLiteralExpr(Literal expr);
-        R visitUnaryExpr(Unary expr);
-        R visitCommaGroupExpr(CommaGroup expr);
-        R visitTernaryExpr(Ternary expr);
-        R visitVariableExpr(Variable expr);
+        R visitAssignExpr(Assign expr) throws Exception;
+;
+        R visitBinaryExpr(Binary expr) throws Exception;
+;
+        R visitGroupingExpr(Grouping expr) throws Exception;
+;
+        R visitLiteralExpr(Literal expr) throws Exception;
+;
+        R visitLogicalExpr(Logical expr) throws Exception;
+;
+        R visitUnaryExpr(Unary expr) throws Exception;
+;
+        R visitCommaGroupExpr(CommaGroup expr) throws Exception;
+;
+        R visitTernaryExpr(Ternary expr) throws Exception;
+;
+        R visitVariableExpr(Variable expr) throws Exception;
+;
     }
     public static class Assign extends Expr {
        public Assign(Token name, Expr value) {
@@ -26,7 +38,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitAssignExpr(this);
         }
 
@@ -41,7 +53,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitBinaryExpr(this);
         }
 
@@ -55,7 +67,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitGroupingExpr(this);
         }
 
@@ -67,11 +79,27 @@ public abstract class Expr {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitLiteralExpr(this);
         }
 
         final Object value;
+    }
+    public static class Logical extends Expr {
+       public Logical(Expr left, Token operator, Expr right) {
+            this.left = left;
+            this.operator = operator;
+            this.right = right;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitLogicalExpr(this);
+        }
+
+        final Expr left;
+        final Token operator;
+        final Expr right;
     }
     public static class Unary extends Expr {
        public Unary(Token operator, Expr right) {
@@ -80,7 +108,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitUnaryExpr(this);
         }
 
@@ -94,7 +122,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitCommaGroupExpr(this);
         }
 
@@ -109,7 +137,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitTernaryExpr(this);
         }
 
@@ -123,12 +151,12 @@ public abstract class Expr {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) {
+        public <R> R accept(Visitor<R> visitor) throws Exception {
             return visitor.visitVariableExpr(this);
         }
 
         final Token name;
     }
 
-    public abstract <R> R accept(Visitor<R> visitor);
+    public abstract <R> R accept(Visitor<R> visitor) throws Exception;
 }

@@ -1,4 +1,4 @@
-package com.puritylake.tool;
+package com.puritylake;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -10,7 +10,7 @@ import java.util.List;
 public class GenerateAST {
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
-            System.err.println("USage: generate_ast <output_directory>");
+            System.err.println("Usage: generate_ast <output_directory>");
         }
         String outputDir = args[0];
 
@@ -19,6 +19,7 @@ public class GenerateAST {
                 "Binary     : Expr left, Token operator, Expr right",
                 "Grouping   : Expr expression",
                 "Literal    : Object value",
+                "Logical    : Expr left, Token operator, Expr right",
                 "Unary      : Token operator, Expr right",
                 "CommaGroup : Expr left, Expr right",
                 "Ternary    : Expr cond, Expr trueVal, Expr falseVal",
@@ -28,14 +29,20 @@ public class GenerateAST {
         defineAst(outputDir, "Stmt", Arrays.asList(
                 "Block      : List<Stmt> statements",
                 "Expression : Expr expression",
+                "If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
                 "Print      : Expr expression",
-                "Var        : Token name, Expr initializer, boolean initialized"
+                "Var        : Token name, Expr initializer, boolean initialized",
+                "While      : Expr condition, Stmt body",
+                "For        : Stmt init, Expr cond, Expr post, Stmt body",
+                "Break      : Token name : ControlFlowException",
+                "Continue   : Token name : ControlFlowException"
+
         ));
     }
 
     private static void defineAst(
             String outputDir, String baseName, List<String> types)
-        throws IOException {
+            throws IOException {
         String path = outputDir + "/" + baseName + ".java";
         PrintWriter writer = new PrintWriter(path, StandardCharsets.UTF_8);
 
@@ -47,6 +54,8 @@ public class GenerateAST {
         writer.println();
         writer.println("package com.puritylake.lox.parsing;");
         writer.println();
+        writer.println("import com.puritylake.lox.exceptions.*;");
+        writer.println();
         writer.println("import java.util.List;");
         writer.println();
         writer.println("public abstract class " + baseName + " {");
@@ -54,13 +63,19 @@ public class GenerateAST {
         defineVisitor(writer, baseName, types);
 
         for (String type : types) {
-            String className = type.split(":")[0].trim();
-            String fields = type.split(":")[1].trim();
-            defineType(writer, baseName, className, fields);
+            String[] split = type.split(":");
+            String className = split[0].trim();
+            String fields = split[1].trim();
+            String exception = null;
+            if (split.length == 3) {
+                exception = split[2].trim();
+            }
+            defineType(writer, baseName, className, fields, exception);
         }
 
         writer.println();
-        writer.println("    public abstract <R> R accept(Visitor<R> visitor);");
+        //writer.println("    public abstract <R> R accept(Visitor<R> visitor);");
+        writer.println("    public abstract <R> R accept(Visitor<R> visitor) throws Exception;");
 
         writer.println("}");
         writer.close();
@@ -70,23 +85,36 @@ public class GenerateAST {
         writer.println("    public interface Visitor<R> {");
 
         for (String type : types) {
-            String typeName = type.split(":")[0].trim();
-            writer.println("        R visit" + typeName + baseName + "(" +
-                    typeName + " " + baseName.toLowerCase() + ");");
+            String exception = null;
+            String[] split = type.split(":");
+            String typeName = split[0].trim();
+            if (split.length == 3) {
+                exception = split[2].trim();
+            }
+
+            if (exception != null) {
+                writer.println("        R visit" + typeName + baseName + "(" +
+                                        typeName + " " + baseName.toLowerCase() + ") throws " + exception + ";");
+            } else {
+                writer.println("        R visit" + typeName + baseName + "(" +
+                        typeName + " " + baseName.toLowerCase() + ") throws Exception;");
+            }
+            writer.println(";");
         }
 
         writer.println("    }");
     }
-    
+
     private static void defineType(
             PrintWriter writer, String baseName,
-            String className, String fieldList) {
+            String className, String fieldList,
+            String exception) {
         writer.println("    public static class " + className + " extends " +
                 baseName + " {");
-        
+
         // constructor
         writer.println("       public " + className + "(" + fieldList + ") {");
-        
+
         // Store parameters in fields
         String[] fields = fieldList.split(", ");
         for (String field : fields) {
@@ -97,7 +125,11 @@ public class GenerateAST {
 
         writer.println();
         writer.println("        @Override");
-        writer.println("        public <R> R accept(Visitor<R> visitor) {");
+        if (exception != null) {
+            writer.println("        public <R> R accept(Visitor<R> visitor) throws " + exception + " {");
+        } else {
+            writer.println("        public <R> R accept(Visitor<R> visitor) throws Exception {");
+        }
         writer.println("            return visitor.visit" + className + baseName + "(this);");
         writer.println("        }");
 
@@ -109,3 +141,4 @@ public class GenerateAST {
         writer.println("    }");
     }
 }
+
