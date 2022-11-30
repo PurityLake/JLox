@@ -120,7 +120,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                     return left + stringify(right);
                 }
                 throw new RuntimeError(expr.operator,
-                        "Operands must be two number or two strings");
+                        "Operands must be convertible.");
             }
             case GREATER -> {
                 checkNumberOperands(expr.operator, left, right);
