@@ -30,6 +30,7 @@ public class GenerateAST {
         defineAst(outputDir, "Stmt", Arrays.asList(
                 "Block      : List<Stmt> statements",
                 "Expression : Expr expression",
+                "Function   : Token name, List<Token> params, List<Stmt> body",
                 "If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
                 "Print      : Expr expression",
                 "Var        : Token name, Expr initializer, boolean initialized",
@@ -137,7 +138,7 @@ public class GenerateAST {
         // Fields
         writer.println();
         for (String field : fields) {
-            writer.println("        final " + field + ";");
+            writer.println("        public final " + field + ";");
         }
         writer.println("    }");
     }

@@ -2,8 +2,9 @@ package com.puritylake.lox.parsing;
 
 import com.puritylake.lox.Environment;
 import com.puritylake.lox.Lox;
-import com.puritylake.lox.LoxCallable;
+import com.puritylake.lox.types.LoxCallable;
 import com.puritylake.lox.exceptions.ControlFlowException;
+import com.puritylake.lox.types.LoxFunction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 return "<native fn>";
             }
         }, true);
+    }
+
+    public Environment getGlobals() {
+        return globals;
     }
 
     public void interpret(List<Stmt> statements) throws Exception {
@@ -86,7 +91,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         throw new RuntimeError(operator, "Operands must be numbers");
     }
 
-    private void executeBlock(List<Stmt> statements, Environment environment) throws Exception {
+    public void executeBlock(List<Stmt> statements, Environment environment) throws Exception {
         Environment previous = this.environment;
         try {
             this.environment = environment;
@@ -187,7 +192,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         LoxCallable function = (LoxCallable)callee;
         if (arguments.size() != function.arity()) {
             throw new RuntimeError(expr.paren, "Expected " + function.arity() +
-                    "arguments but got " + arguments.size() + ".");
+                    " arguments but got " + arguments.size() + ".");
         }
         return function.call(this, arguments);
     }
@@ -261,6 +266,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) throws Exception {
         evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitFunctionStmt(Stmt.Function stmt) throws Exception {
+        LoxFunction function = new LoxFunction(stmt);
+        environment.define(stmt.name.lexeme(), function, true);
         return null;
     }
 

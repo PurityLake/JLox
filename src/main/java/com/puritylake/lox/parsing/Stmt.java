@@ -16,6 +16,8 @@ public abstract class Stmt {
 ;
         R visitExpressionStmt(Expression stmt) throws Exception;
 ;
+        R visitFunctionStmt(Function stmt) throws Exception;
+;
         R visitIfStmt(If stmt) throws Exception;
 ;
         R visitPrintStmt(Print stmt) throws Exception;
@@ -41,7 +43,7 @@ public abstract class Stmt {
             return visitor.visitBlockStmt(this);
         }
 
-        final List<Stmt> statements;
+        public final List<Stmt> statements;
     }
     public static class Expression extends Stmt {
        public Expression(Expr expression) {
@@ -53,7 +55,23 @@ public abstract class Stmt {
             return visitor.visitExpressionStmt(this);
         }
 
-        final Expr expression;
+        public final Expr expression;
+    }
+    public static class Function extends Stmt {
+       public Function(Token name, List<Token> params, List<Stmt> body) {
+            this.name = name;
+            this.params = params;
+            this.body = body;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitFunctionStmt(this);
+        }
+
+        public final Token name;
+        public final List<Token> params;
+        public final List<Stmt> body;
     }
     public static class If extends Stmt {
        public If(Expr condition, Stmt thenBranch, Stmt elseBranch) {
@@ -67,9 +85,9 @@ public abstract class Stmt {
             return visitor.visitIfStmt(this);
         }
 
-        final Expr condition;
-        final Stmt thenBranch;
-        final Stmt elseBranch;
+        public final Expr condition;
+        public final Stmt thenBranch;
+        public final Stmt elseBranch;
     }
     public static class Print extends Stmt {
        public Print(Expr expression) {
@@ -81,7 +99,7 @@ public abstract class Stmt {
             return visitor.visitPrintStmt(this);
         }
 
-        final Expr expression;
+        public final Expr expression;
     }
     public static class Var extends Stmt {
        public Var(Token name, Expr initializer, boolean initialized) {
@@ -95,9 +113,9 @@ public abstract class Stmt {
             return visitor.visitVarStmt(this);
         }
 
-        final Token name;
-        final Expr initializer;
-        final boolean initialized;
+        public final Token name;
+        public final Expr initializer;
+        public final boolean initialized;
     }
     public static class While extends Stmt {
        public While(Expr condition, Stmt body) {
@@ -110,8 +128,8 @@ public abstract class Stmt {
             return visitor.visitWhileStmt(this);
         }
 
-        final Expr condition;
-        final Stmt body;
+        public final Expr condition;
+        public final Stmt body;
     }
     public static class For extends Stmt {
        public For(Stmt init, Expr cond, Expr post, Stmt body) {
@@ -126,10 +144,10 @@ public abstract class Stmt {
             return visitor.visitForStmt(this);
         }
 
-        final Stmt init;
-        final Expr cond;
-        final Expr post;
-        final Stmt body;
+        public final Stmt init;
+        public final Expr cond;
+        public final Expr post;
+        public final Stmt body;
     }
     public static class Break extends Stmt {
        public Break(Token name) {
@@ -141,7 +159,7 @@ public abstract class Stmt {
             return visitor.visitBreakStmt(this);
         }
 
-        final Token name;
+        public final Token name;
     }
     public static class Continue extends Stmt {
        public Continue(Token name) {
@@ -153,7 +171,7 @@ public abstract class Stmt {
             return visitor.visitContinueStmt(this);
         }
 
-        final Token name;
+        public final Token name;
     }
 
     public abstract <R> R accept(Visitor<R> visitor) throws Exception;

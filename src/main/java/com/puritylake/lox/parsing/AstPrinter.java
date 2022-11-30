@@ -16,6 +16,11 @@ public class AstPrinter implements Expr.Visitor<String> {
     }
 
     @Override
+    public String visitCallExpr(Expr.Call expr) throws Exception {
+        return parenthesize("call", expr.callee);
+    }
+
+    @Override
     public String visitGroupingExpr(Expr.Grouping expr) throws Exception {
         return parenthesize("group", expr.expression);
     }

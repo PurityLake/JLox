@@ -1,9 +1,5 @@
-var a = 0;
-
-while(true) {
-    a = a + 1;
-    if (a >= 10) {
-        break;
-    }
-    print a;
+func sayHi(first, last) {
+    print "Hi, " + first + " " + last + "!";
 }
+
+sayHi("Dear", "Reader");
