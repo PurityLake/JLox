@@ -16,6 +16,8 @@ public abstract class Expr {
 ;
         R visitBinaryExpr(Binary expr) throws Exception;
 ;
+        R visitCallExpr(Call expr) throws Exception;
+;
         R visitGroupingExpr(Grouping expr) throws Exception;
 ;
         R visitLiteralExpr(Literal expr) throws Exception;
@@ -60,6 +62,22 @@ public abstract class Expr {
         final Expr left;
         final Token operator;
         final Expr right;
+    }
+    public static class Call extends Expr {
+       public Call(Expr callee, Token paren, List<Expr> arguments) {
+            this.callee = callee;
+            this.paren = paren;
+            this.arguments = arguments;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitCallExpr(this);
+        }
+
+        final Expr callee;
+        final Token paren;
+        final List<Expr> arguments;
     }
     public static class Grouping extends Expr {
        public Grouping(Expr expression) {
