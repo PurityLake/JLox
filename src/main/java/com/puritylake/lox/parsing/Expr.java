@@ -32,6 +32,8 @@ public abstract class Expr {
 ;
         R visitVariableExpr(Variable expr) throws Exception;
 ;
+        R visitAnonFunctionExpr(AnonFunction expr) throws Exception;
+;
     }
     public static class Assign extends Expr {
        public Assign(Token name, Expr value) {
@@ -174,6 +176,18 @@ public abstract class Expr {
         }
 
         public final Token name;
+    }
+    public static class AnonFunction extends Expr {
+       public AnonFunction(Stmt func) {
+            this.func = func;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitAnonFunctionExpr(this);
+        }
+
+        public final Stmt func;
     }
 
     public abstract <R> R accept(Visitor<R> visitor) throws Exception;

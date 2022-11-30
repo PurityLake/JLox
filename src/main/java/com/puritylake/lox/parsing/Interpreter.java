@@ -258,6 +258,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitAnonFunctionExpr(Expr.AnonFunction expr) throws Exception {
+        LoxFunction function = new LoxFunction((Stmt.Function)expr.func, environment);
+        return function;
+    }
+
+    @Override
     public Void visitBlockStmt(Stmt.Block stmt) throws Exception {
         executeBlock(stmt.statements, new Environment(environment));
         return null;
@@ -271,7 +277,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) throws Exception {
-        LoxFunction function = new LoxFunction(stmt);
+        LoxFunction function = new LoxFunction(stmt, environment);
         environment.define(stmt.name.lexeme(), function, true);
         return null;
     }

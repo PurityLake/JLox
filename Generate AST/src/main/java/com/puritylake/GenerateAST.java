@@ -15,16 +15,17 @@ public class GenerateAST {
         String outputDir = args[0];
 
         defineAst(outputDir, "Expr", Arrays.asList(
-                "Assign     : Token name, Expr value",
-                "Binary     : Expr left, Token operator, Expr right",
-                "Call       : Expr callee, Token paren, List<Expr> arguments",
-                "Grouping   : Expr expression",
-                "Literal    : Object value",
-                "Logical    : Expr left, Token operator, Expr right",
-                "Unary      : Token operator, Expr right",
-                "CommaGroup : Expr left, Expr right",
-                "Ternary    : Expr cond, Expr trueVal, Expr falseVal",
-                "Variable   : Token name"
+                "Assign         : Token name, Expr value",
+                "Binary         : Expr left, Token operator, Expr right",
+                "Call           : Expr callee, Token paren, List<Expr> arguments",
+                "Grouping       : Expr expression",
+                "Literal        : Object value",
+                "Logical        : Expr left, Token operator, Expr right",
+                "Unary          : Token operator, Expr right",
+                "CommaGroup     : Expr left, Expr right",
+                "Ternary        : Expr cond, Expr trueVal, Expr falseVal",
+                "Variable       : Token name",
+                "AnonFunction   : Stmt func"
         ));
 
         defineAst(outputDir, "Stmt", Arrays.asList(

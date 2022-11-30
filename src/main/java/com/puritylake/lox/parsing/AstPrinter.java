@@ -56,6 +56,11 @@ public class AstPrinter implements Expr.Visitor<String> {
         return null;
     }
 
+    @Override
+    public String visitAnonFunctionExpr(Expr.AnonFunction expr) throws Exception {
+        return null;
+    }
+
     private String parenthesize(String name, Expr... exprs) throws Exception {
         StringBuilder builder = new StringBuilder();
 

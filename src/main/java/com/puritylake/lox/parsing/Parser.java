@@ -83,7 +83,10 @@ public class Parser {
     }
 
     private Stmt.Function function(String kind) {
-        Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+        Token name = null;
+        if (match(IDENTIFIER)) {
+            name = previous();
+        }
 
         consume(LEFT_PAREN, "Expect '(' after " + kind + " name.");
         List<Token> parameters = new ArrayList<>();
@@ -384,6 +387,10 @@ public class Parser {
             do {
                 if (arguments.size() >= 255) {
                     error(peek(), "Can't have more than 255 arguments.");
+                }
+                if (match(FUN)) {
+                    arguments.add(new Expr.AnonFunction(function("function")));
+                    continue;
                 }
                 Expr arg = expressionNoComma();
                 arguments.add(arg);
