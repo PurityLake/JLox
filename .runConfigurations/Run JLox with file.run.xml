@@ -5,8 +5,8 @@
     <option name="PROGRAM_PARAMETERS" value="test.lox" />
     <option name="WORKING_DIRECTORY" value="$ProjectFileDir$" />
     <method v="2">
+      <option name="RunConfigurationTask" enabled="false" run_configuration_name="Generate Java Files" run_configuration_type="Application" />
       <option name="Make" enabled="true" />
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Generate Exp" run_configuration_type="Application" />
     </method>
   </configuration>
 </component>
