@@ -6,6 +6,7 @@
     <option name="WORKING_DIRECTORY" value="$ProjectFileDir$" />
     <method v="2">
       <option name="Make" enabled="true" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Generate Exp" run_configuration_type="Application" />
     </method>
   </configuration>
 </component>
