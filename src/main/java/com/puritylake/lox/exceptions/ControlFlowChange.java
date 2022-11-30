@@ -1,8 +1,8 @@
 package com.puritylake.lox.exceptions;
 
-public class ControlFlowException extends Exception {
+public class ControlFlowChange extends Exception {
     public final boolean isBreak;
-    public ControlFlowException(boolean brk) {
+    public ControlFlowChange(boolean brk) {
         isBreak = brk;
     }
 }

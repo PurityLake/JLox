@@ -1,8 +1,9 @@
 package com.puritylake.lox.types;
 
 import com.puritylake.lox.Environment;
-import com.puritylake.lox.exceptions.ControlFlowException;
+import com.puritylake.lox.exceptions.ControlFlowChange;
 import com.puritylake.lox.parsing.Interpreter;
+import com.puritylake.lox.parsing.Return;
 import com.puritylake.lox.parsing.Stmt;
 
 import java.util.List;
@@ -28,8 +29,10 @@ public class LoxFunction implements LoxCallable {
 
         try {
             interpreter.executeBlock(declaration.body, environment);
-        } catch (ControlFlowException ignored) {
+        } catch (ControlFlowChange ignored) {
 
+        } catch (Return returnValue) {
+            return returnValue.value;
         } catch (Exception e) {
             throw e;
         }

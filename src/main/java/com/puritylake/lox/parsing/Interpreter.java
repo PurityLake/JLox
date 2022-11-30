@@ -3,7 +3,7 @@ package com.puritylake.lox.parsing;
 import com.puritylake.lox.Environment;
 import com.puritylake.lox.Lox;
 import com.puritylake.lox.types.LoxCallable;
-import com.puritylake.lox.exceptions.ControlFlowException;
+import com.puritylake.lox.exceptions.ControlFlowChange;
 import com.puritylake.lox.types.LoxFunction;
 
 import java.util.ArrayList;
@@ -294,6 +294,14 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitReturnStmt(Stmt.Return stmt) throws Exception {
+        Object value = null;
+        if (stmt.value != null) value = evaluate(stmt.value);
+
+        throw new Return(value);
+    }
+
+    @Override
     public Void visitVarStmt(Stmt.Var stmt) throws Exception {
         Object value = null;
         if (stmt.initializer != null) {
@@ -309,7 +317,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         while (isTruthy(evaluate(stmt.condition))) {
             try {
                 execute(stmt.body);
-            } catch (ControlFlowException cfe) {
+            } catch (ControlFlowChange cfe) {
                 if (cfe.isBreak) {
                     break;
                 }
@@ -331,7 +339,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         while (!hasCond || isTruthy(evaluate(stmt.cond))) {
             try {
                 execute(stmt.body);
-            } catch (ControlFlowException cfe) {
+            } catch (ControlFlowChange cfe) {
                 if (cfe.isBreak) {
                     break;
                 }
@@ -345,12 +353,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitBreakStmt(Stmt.Break stmt) throws ControlFlowException {
-        throw new ControlFlowException(true);
+    public Void visitBreakStmt(Stmt.Break stmt) throws ControlFlowChange {
+        throw new ControlFlowChange(true);
     }
 
     @Override
-    public Void visitContinueStmt(Stmt.Continue stmt) throws ControlFlowException {
-        throw new ControlFlowException(false);
+    public Void visitContinueStmt(Stmt.Continue stmt) throws ControlFlowChange {
+        throw new ControlFlowChange(false);
     }
 }

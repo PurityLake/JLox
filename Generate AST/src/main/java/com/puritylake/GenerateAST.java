@@ -33,11 +33,12 @@ public class GenerateAST {
                 "Function   : Token name, List<Token> params, List<Stmt> body",
                 "If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
                 "Print      : Expr expression",
+                "Return     : Token keyword, Expr value",
                 "Var        : Token name, Expr initializer, boolean initialized",
                 "While      : Expr condition, Stmt body",
                 "For        : Stmt init, Expr cond, Expr post, Stmt body",
-                "Break      : Token name : ControlFlowException",
-                "Continue   : Token name : ControlFlowException"
+                "Break      : Token name : ControlFlowChange",
+                "Continue   : Token name : ControlFlowChange"
 
         ));
     }

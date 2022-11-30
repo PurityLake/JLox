@@ -22,15 +22,17 @@ public abstract class Stmt {
 ;
         R visitPrintStmt(Print stmt) throws Exception;
 ;
+        R visitReturnStmt(Return stmt) throws Exception;
+;
         R visitVarStmt(Var stmt) throws Exception;
 ;
         R visitWhileStmt(While stmt) throws Exception;
 ;
         R visitForStmt(For stmt) throws Exception;
 ;
-        R visitBreakStmt(Break stmt) throws ControlFlowException;
+        R visitBreakStmt(Break stmt) throws ControlFlowChange;
 ;
-        R visitContinueStmt(Continue stmt) throws ControlFlowException;
+        R visitContinueStmt(Continue stmt) throws ControlFlowChange;
 ;
     }
     public static class Block extends Stmt {
@@ -101,6 +103,20 @@ public abstract class Stmt {
 
         public final Expr expression;
     }
+    public static class Return extends Stmt {
+       public Return(Token keyword, Expr value) {
+            this.keyword = keyword;
+            this.value = value;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitReturnStmt(this);
+        }
+
+        public final Token keyword;
+        public final Expr value;
+    }
     public static class Var extends Stmt {
        public Var(Token name, Expr initializer, boolean initialized) {
             this.name = name;
@@ -155,7 +171,7 @@ public abstract class Stmt {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) throws ControlFlowException {
+        public <R> R accept(Visitor<R> visitor) throws ControlFlowChange {
             return visitor.visitBreakStmt(this);
         }
 
@@ -167,7 +183,7 @@ public abstract class Stmt {
         }
 
         @Override
-        public <R> R accept(Visitor<R> visitor) throws ControlFlowException {
+        public <R> R accept(Visitor<R> visitor) throws ControlFlowChange {
             return visitor.visitContinueStmt(this);
         }
 
