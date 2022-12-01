@@ -25,6 +25,8 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
     }
 
+    private Map<String, ResolverEntry> lastPoppedScope = null;
+
     private final Interpreter interpreter;
     private final Stack<Map<String, ResolverEntry>> scopes = new Stack<>();
     private FunctionType currentFunction = FunctionType.NONE;
@@ -38,10 +40,11 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     public void resolve(List<Stmt> statements) throws Exception {
+        beginScope();
         for (Stmt statement : statements) {
             resolve(statement);
         }
-        checkUnusedLocals(null);
+        endScope(null);
     }
 
     private void resolveBlock(List<Stmt> statements) throws Exception {
@@ -59,16 +62,16 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void endScope(Token ignore) {
+        lastPoppedScope = scopes.pop();
         checkUnusedLocals(ignore);
-        scopes.pop();
     }
 
     private void checkUnusedLocals(Token ignore) {
-        if (!scopes.isEmpty()) {
-            Map<String, ResolverEntry> scope = scopes.peek();
+        if (lastPoppedScope != null) {
+            Map<String, ResolverEntry> scope = lastPoppedScope;
             for (String key : scope.keySet()) {
                 ResolverEntry entry = scope.get(key);
-                if ((ignore != null && entry.token != ignore) && !entry.used) {
+                if (entry.token != ignore && !entry.used) {
                     System.err.printf("[line %d] local variable '%s' is unused.\n", entry.token.line(), entry.token.lexeme());
                 }
             }

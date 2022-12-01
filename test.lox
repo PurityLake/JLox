@@ -16,4 +16,6 @@ fun main() {
     print a;
 }
 
+f();
+
 main();
