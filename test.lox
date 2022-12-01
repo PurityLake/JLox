@@ -2,6 +2,10 @@ print "here";
 
 var a = 10;
 
+var f = fun () {
+    print a;
+};
+
 fun main() {
     fun printA() {
         print a;

@@ -365,6 +365,14 @@ public class Parser {
             return new Expr.Unary(operator, right);
         }
 
+        return fun();
+    }
+
+    private Expr fun() {
+        if (match(FUN)) {
+            return new Expr.AnonFunction(function("function"));
+        }
+
         return call();
     }
 
