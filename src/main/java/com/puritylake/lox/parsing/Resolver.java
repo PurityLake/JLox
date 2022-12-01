@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private enum FunctionType {
-        NONE, FUNCTION
+        NONE, FUNCTION, METHOD
     }
 
     private static class ResolverEntry {
@@ -138,9 +138,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private void resolveClass(Stmt.Class klass) throws Exception {
         beginScope();
         for (Stmt.Function func :  klass.methods) {
-            declare(func.name);
-            define(func.name);
-            resolveFunction(func, FunctionType.FUNCTION);
+            resolveFunction(func, FunctionType.METHOD);
         }
         endScope(klass.name);
     }
@@ -171,6 +169,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitGetExpr(Expr.Get expr) throws Exception {
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
     public Void visitGroupingExpr(Expr.Grouping expr) throws Exception {
         resolve(expr.expression);
         return null;
@@ -185,6 +189,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitLogicalExpr(Expr.Logical expr) throws Exception {
         resolve(expr.left);
         resolve(expr.right);
+        return null;
+    }
+
+    @Override
+    public Void visitSetExpr(Expr.Set expr) throws Exception {
+        resolve(expr.value);
+        resolve(expr.object);
         return null;
     }
 

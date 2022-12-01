@@ -21,6 +21,11 @@ public class AstPrinter implements Expr.Visitor<String> {
     }
 
     @Override
+    public String visitGetExpr(Expr.Get expr) throws Exception {
+        return null;
+    }
+
+    @Override
     public String visitGroupingExpr(Expr.Grouping expr) throws Exception {
         return parenthesize("group", expr.expression);
     }
@@ -34,6 +39,11 @@ public class AstPrinter implements Expr.Visitor<String> {
     @Override
     public String visitLogicalExpr(Expr.Logical expr) throws Exception {
         return parenthesize("logical", expr.left, expr.right);
+    }
+
+    @Override
+    public String visitSetExpr(Expr.Set expr) throws Exception {
+        return null;
     }
 
     @Override

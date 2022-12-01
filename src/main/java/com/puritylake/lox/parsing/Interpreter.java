@@ -5,9 +5,12 @@ import com.puritylake.lox.types.LoxCallable;
 import com.puritylake.lox.exceptions.ControlFlowChange;
 import com.puritylake.lox.types.LoxClass;
 import com.puritylake.lox.types.LoxFunction;
+import com.puritylake.lox.types.LoxInstance;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
@@ -199,6 +202,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitGetExpr(Expr.Get expr) throws Exception {
+        Object object = evaluate(expr.object);
+        if (object instanceof LoxInstance instance) {
+            return instance.get(expr.name);
+        }
+
+        throw new RuntimeError(expr.name, "Only instances have properties.");
+    }
+
+    @Override
     public Object visitGroupingExpr(Expr.Grouping expr) throws Exception {
         return evaluate(expr.expression);
     }
@@ -219,6 +232,19 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         return evaluate(expr.right);
+    }
+
+    @Override
+    public Object visitSetExpr(Expr.Set expr) throws Exception {
+        Object object = evaluate(expr.object);
+
+        if (!(object instanceof LoxInstance instance)) {
+            throw new RuntimeError(expr.name, "Only instances have fields.");
+        }
+
+        Object value = evaluate(expr.value);
+        instance.set(expr.name, value);
+        return null;
     }
 
     @Override
@@ -280,7 +306,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) throws Exception {
-        LoxClass klass = new LoxClass(stmt.name.lexeme());
+        Map<String, LoxFunction> methods = new HashMap<>();
+        for (Stmt.Function method : stmt.methods) {
+            LoxFunction function = new LoxFunction(method, environment);
+            methods.put(method.name.lexeme(), function);
+        }
+        LoxClass klass = new LoxClass(stmt.name.lexeme(), methods);
+
         environment.defineIdx(klass,true);
         return null;
     }

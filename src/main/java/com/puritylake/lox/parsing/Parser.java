@@ -280,6 +280,8 @@ public class Parser {
 
             if (expr instanceof Expr.Variable var) {
                 return new Expr.Assign(var.name, var, value);
+            } else if (expr instanceof Expr.Get get) {
+                return new Expr.Set(get.object, get.name, value);
             }
 
             error(equals, "Invalid assignment target.");
@@ -394,6 +396,9 @@ public class Parser {
         while (true) {
             if (match(LEFT_PAREN)) {
                 expr = finishCall(expr);
+            } else if (match(DOT)) {
+                Token name = consume(IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
             } else {
                 break;
             }

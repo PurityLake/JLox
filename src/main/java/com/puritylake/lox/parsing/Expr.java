@@ -13,9 +13,11 @@ public abstract class Expr {
         R visitAssignExpr(Assign expr) throws Exception;
         R visitBinaryExpr(Binary expr) throws Exception;
         R visitCallExpr(Call expr) throws Exception;
+        R visitGetExpr(Get expr) throws Exception;
         R visitGroupingExpr(Grouping expr) throws Exception;
         R visitLiteralExpr(Literal expr) throws Exception;
         R visitLogicalExpr(Logical expr) throws Exception;
+        R visitSetExpr(Set expr) throws Exception;
         R visitUnaryExpr(Unary expr) throws Exception;
         R visitCommaGroupExpr(CommaGroup expr) throws Exception;
         R visitTernaryExpr(Ternary expr) throws Exception;
@@ -70,6 +72,20 @@ public abstract class Expr {
         public final Token paren;
         public final List<Expr> arguments;
     }
+    public static class Get extends Expr {
+       public Get(Expr object, Token name) {
+            this.object = object;
+            this.name = name;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitGetExpr(this);
+        }
+
+        public final Expr object;
+        public final Token name;
+    }
     public static class Grouping extends Expr {
        public Grouping(Expr expression) {
             this.expression = expression;
@@ -109,6 +125,22 @@ public abstract class Expr {
         public final Expr left;
         public final Token operator;
         public final Expr right;
+    }
+    public static class Set extends Expr {
+       public Set(Expr object, Token name, Expr value) {
+            this.object = object;
+            this.name = name;
+            this.value = value;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitSetExpr(this);
+        }
+
+        public final Expr object;
+        public final Token name;
+        public final Expr value;
     }
     public static class Unary extends Expr {
        public Unary(Token operator, Expr right) {
