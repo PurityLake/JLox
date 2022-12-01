@@ -1,5 +1,3 @@
-print "here";
-
 var a = 10;
 
 var f = fun () {
@@ -12,6 +10,14 @@ fun main() {
     }
     printA();
     var a = 20;
+    {
+        var a = 30;
+        print a;
+    }
+    {
+        var a = 40;
+        print a;
+    }
     printA();
     print a;
 }
@@ -19,3 +25,4 @@ fun main() {
 f();
 
 main();
+print "end";

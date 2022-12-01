@@ -15,7 +15,7 @@ public class GenerateAST {
         String outputDir = args[0];
 
         defineAst(outputDir, "Expr", Arrays.asList(
-                "Assign         : Token name, Expr value",
+                "Assign         : Token name, Expr var, Expr value",
                 "Binary         : Expr left, Token operator, Expr right",
                 "Call           : Expr callee, Token paren, List<Expr> arguments",
                 "Grouping       : Expr expression",
@@ -24,9 +24,9 @@ public class GenerateAST {
                 "Unary          : Token operator, Expr right",
                 "CommaGroup     : Expr left, Expr right",
                 "Ternary        : Expr cond, Expr trueVal, Expr falseVal",
-                "Variable       : Token name",
+                "Variable       : Token name, !int idx, !int depth",
                 "AnonFunction   : Stmt func"
-        ));
+        ), false);
 
         defineAst(outputDir, "Stmt", Arrays.asList(
                 "Block      : List<Stmt> statements",
@@ -40,12 +40,11 @@ public class GenerateAST {
                 "For        : Stmt init, Expr cond, Expr post, Stmt body",
                 "Break      : Token name : ControlFlowChange",
                 "Continue   : Token name : ControlFlowChange"
-
-        ));
+        ), true);
     }
 
     private static void defineAst(
-            String outputDir, String baseName, List<String> types)
+            String outputDir, String baseName, List<String> types, boolean hasExpection)
             throws IOException {
         String path = outputDir + "/" + baseName + ".java";
         PrintWriter writer = new PrintWriter(path, StandardCharsets.UTF_8);
@@ -58,8 +57,10 @@ public class GenerateAST {
         writer.println();
         writer.println("package com.puritylake.lox.parsing;");
         writer.println();
-        writer.println("import com.puritylake.lox.exceptions.*;");
-        writer.println();
+        if (hasExpection) {
+            writer.println("import com.puritylake.lox.exceptions.*;");
+            writer.println();
+        }
         writer.println("import java.util.List;");
         writer.println();
         writer.println("public abstract class " + baseName + " {");
@@ -78,7 +79,6 @@ public class GenerateAST {
         }
 
         writer.println();
-        //writer.println("    public abstract <R> R accept(Visitor<R> visitor);");
         writer.println("    public abstract <R> R accept(Visitor<R> visitor) throws Exception;");
 
         writer.println("}");
@@ -103,7 +103,6 @@ public class GenerateAST {
                 writer.println("        R visit" + typeName + baseName + "(" +
                         typeName + " " + baseName.toLowerCase() + ") throws Exception;");
             }
-            writer.println(";");
         }
 
         writer.println("    }");
@@ -117,10 +116,22 @@ public class GenerateAST {
                 baseName + " {");
 
         // constructor
-        writer.println("       public " + className + "(" + fieldList + ") {");
+        String[] fields = fieldList.split(", ");
+        writer.print("       public " + className + "(");// + fieldList + ") {");
+        for (int i = 0; i < fields.length; ++i) {
+            if (fields[i].startsWith("!")) {
+                String field = fields[i].substring(1);
+                writer.print(field);
+            } else {
+                writer.print(fields[i]);
+            }
+            if (i + 1 < fields.length) {
+                writer.print(", ");
+            }
+        }
+        writer.println(") {");
 
         // Store parameters in fields
-        String[] fields = fieldList.split(", ");
         for (String field : fields) {
             String name = field.split(" ")[1];
             writer.println("            this." + name + " = " + name + ";");
@@ -140,7 +151,12 @@ public class GenerateAST {
         // Fields
         writer.println();
         for (String field : fields) {
-            writer.println("        public final " + field + ";");
+            if (field.startsWith("!")) {
+                field = field.substring(1);
+                writer.println("        public " + field + ";");
+            } else {
+                writer.println("        public final " + field + ";");
+            }
         }
         writer.println("    }");
     }

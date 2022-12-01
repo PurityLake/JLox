@@ -3,7 +3,6 @@ package com.puritylake.lox.parsing;
 import com.puritylake.lox.Lox;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.puritylake.lox.parsing.TokenType.*;
@@ -264,9 +263,8 @@ public class Parser {
             Token equals = previous();
             Expr value = ternary();
 
-            if (expr instanceof Expr.Variable) {
-                Token name = ((Expr.Variable)expr).name;
-                return new Expr.Assign(name, value);
+            if (expr instanceof Expr.Variable var) {
+                return new Expr.Assign(var.name, var, value);
             }
 
             error(equals, "Invalid assignment target.");
@@ -420,7 +418,7 @@ public class Parser {
         }
 
         if (match(IDENTIFIER)) {
-            return new Expr.Variable(previous());
+            return new Expr.Variable(previous(), -1, -1);
         }
 
         if (match(LEFT_PAREN)) {
@@ -446,15 +444,9 @@ public class Parser {
             if (previous().type() == SEMICOLON) return;
 
             switch (peek().type()) {
-                case CLASS:
-                case FUN:
-                case VAR:
-                case FOR:
-                case IF:
-                case WHILE:
-                case PRINT:
-                case RETURN:
+                case CLASS, FUN, VAR, FOR, IF, WHILE, PRINT, RETURN -> {
                     return;
+                }
             }
 
             advance();

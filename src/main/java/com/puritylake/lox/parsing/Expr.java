@@ -6,38 +6,26 @@
 
 package com.puritylake.lox.parsing;
 
-import com.puritylake.lox.exceptions.*;
-
 import java.util.List;
 
 public abstract class Expr {
     public interface Visitor<R> {
         R visitAssignExpr(Assign expr) throws Exception;
-;
         R visitBinaryExpr(Binary expr) throws Exception;
-;
         R visitCallExpr(Call expr) throws Exception;
-;
         R visitGroupingExpr(Grouping expr) throws Exception;
-;
         R visitLiteralExpr(Literal expr) throws Exception;
-;
         R visitLogicalExpr(Logical expr) throws Exception;
-;
         R visitUnaryExpr(Unary expr) throws Exception;
-;
         R visitCommaGroupExpr(CommaGroup expr) throws Exception;
-;
         R visitTernaryExpr(Ternary expr) throws Exception;
-;
         R visitVariableExpr(Variable expr) throws Exception;
-;
         R visitAnonFunctionExpr(AnonFunction expr) throws Exception;
-;
     }
     public static class Assign extends Expr {
-       public Assign(Token name, Expr value) {
+       public Assign(Token name, Expr var, Expr value) {
             this.name = name;
+            this.var = var;
             this.value = value;
         }
 
@@ -47,6 +35,7 @@ public abstract class Expr {
         }
 
         public final Token name;
+        public final Expr var;
         public final Expr value;
     }
     public static class Binary extends Expr {
@@ -166,8 +155,10 @@ public abstract class Expr {
         public final Expr falseVal;
     }
     public static class Variable extends Expr {
-       public Variable(Token name) {
+       public Variable(Token name, int idx, int depth) {
             this.name = name;
+            this.idx = idx;
+            this.depth = depth;
         }
 
         @Override
@@ -176,6 +167,8 @@ public abstract class Expr {
         }
 
         public final Token name;
+        public int idx;
+        public int depth;
     }
     public static class AnonFunction extends Expr {
        public AnonFunction(Stmt func) {

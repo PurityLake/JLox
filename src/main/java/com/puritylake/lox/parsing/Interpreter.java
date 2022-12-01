@@ -1,19 +1,15 @@
 package com.puritylake.lox.parsing;
 
-import com.puritylake.lox.Environment;
 import com.puritylake.lox.Lox;
 import com.puritylake.lox.types.LoxCallable;
 import com.puritylake.lox.exceptions.ControlFlowChange;
 import com.puritylake.lox.types.LoxFunction;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
-    private final Map<Expr, Integer> locals = new HashMap<>();
     private Environment environment = globals;
 
     public Interpreter() {
@@ -35,10 +31,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }, true);
     }
 
-    public Environment getGlobals() {
-        return globals;
-    }
-
     public void interpret(List<Stmt> statements) throws Exception {
         try {
             for (Stmt statement : statements) {
@@ -47,10 +39,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
-    }
-
-    public void resolve(Expr expr, int depth) {
-        locals.put(expr, depth);
     }
 
     private void execute(Stmt stmt) throws Exception {
@@ -115,9 +103,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitAssignExpr(Expr.Assign expr) throws Exception {
         Object value = evaluate(expr.value);
 
-        Integer distance = locals.get(expr);
-        if (distance != null) {
-            environment.assignAt(distance, expr.name, value);
+        Expr.Variable var = (Expr.Variable)expr.var;
+        if (var.depth != -1) {
+            environment.assignAt(var.depth, var.idx, value);
         } else {
             globals.assign(expr.name, value);
         }
@@ -192,7 +180,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitCallExpr(Expr.Call expr) throws Exception {
         Object callee = evaluate(expr.callee);
 
-        if (!(callee instanceof LoxCallable)) {
+        if (!(callee instanceof LoxCallable function)) {
             throw new RuntimeError(expr.paren,
                     "Can only call functions and classes.");
         }
@@ -202,7 +190,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             arguments.add(evaluate(argument));
         }
 
-        LoxCallable function = (LoxCallable)callee;
         if (arguments.size() != function.arity()) {
             throw new RuntimeError(expr.paren, "Expected " + function.arity() +
                     " arguments but got " + arguments.size() + ".");
@@ -271,18 +258,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     private Object lookUpVariable(Token name, Expr expr) {
-        Integer distance = locals.get(expr);
-        if (distance != null) {
-            return environment.getAt(distance, name.lexeme());
+        Expr.Variable var = (Expr.Variable)expr;
+        if (var.depth != -1) {
+            return environment.getAt(var.depth, ((Expr.Variable)expr).idx);
         } else {
-            return globals.get(name);
+            return globals.get(name.lexeme());
         }
     }
 
     @Override
-    public Object visitAnonFunctionExpr(Expr.AnonFunction expr) throws Exception {
-        LoxFunction function = new LoxFunction((Stmt.Function)expr.func, environment);
-        return function;
+    public Object visitAnonFunctionExpr(Expr.AnonFunction expr) {
+        return new LoxFunction((Stmt.Function)expr.func, environment);
     }
 
     @Override
@@ -298,9 +284,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitFunctionStmt(Stmt.Function stmt) throws Exception {
+    public Void visitFunctionStmt(Stmt.Function stmt) {
         LoxFunction function = new LoxFunction(stmt, environment);
         environment.define(stmt.name.lexeme(), function, true);
+        environment.defineIdx(function, true);
         return null;
     }
 
@@ -337,6 +324,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         environment.define(stmt.name.lexeme(), value, stmt.initialized);
+        environment.defineIdx(value, stmt.initialized);
         return null;
     }
 

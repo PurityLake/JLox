@@ -13,27 +13,16 @@ import java.util.List;
 public abstract class Stmt {
     public interface Visitor<R> {
         R visitBlockStmt(Block stmt) throws Exception;
-;
         R visitExpressionStmt(Expression stmt) throws Exception;
-;
         R visitFunctionStmt(Function stmt) throws Exception;
-;
         R visitIfStmt(If stmt) throws Exception;
-;
         R visitPrintStmt(Print stmt) throws Exception;
-;
         R visitReturnStmt(Return stmt) throws Exception;
-;
         R visitVarStmt(Var stmt) throws Exception;
-;
         R visitWhileStmt(While stmt) throws Exception;
-;
         R visitForStmt(For stmt) throws Exception;
-;
         R visitBreakStmt(Break stmt) throws ControlFlowChange;
-;
         R visitContinueStmt(Continue stmt) throws ControlFlowChange;
-;
     }
     public static class Block extends Stmt {
        public Block(List<Stmt> statements) {

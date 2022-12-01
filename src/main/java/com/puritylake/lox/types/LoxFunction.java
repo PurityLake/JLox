@@ -1,6 +1,6 @@
 package com.puritylake.lox.types;
 
-import com.puritylake.lox.Environment;
+import com.puritylake.lox.parsing.Environment;
 import com.puritylake.lox.exceptions.ControlFlowChange;
 import com.puritylake.lox.parsing.Interpreter;
 import com.puritylake.lox.parsing.Return;
@@ -35,14 +35,16 @@ public class LoxFunction implements LoxCallable {
 
         } catch (Return returnValue) {
             return returnValue.value;
-        } catch (Exception e) {
-            throw e;
         }
         return null;
     }
 
     @Override
     public String toString() {
-        return "<fn " + declaration.name.lexeme() + ">";
+        if (declaration.name != null) {
+            return "<fn " + declaration.name.lexeme() + ">";
+        } else {
+            return "<anonymous fn>";
+        }
     }
 }

@@ -1,12 +1,8 @@
 package com.puritylake.lox.parsing;
 
 import com.puritylake.lox.Lox;
-import com.puritylake.lox.exceptions.ControlFlowChange;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private enum FunctionType {
@@ -18,25 +14,30 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         public Boolean used;
         public final Token token;
 
-        public ResolverEntry(Token token, Boolean defined, Boolean used) {
+        ResolverEntry(Token token, Boolean defined, Boolean used) {
             this.token = token;
             this.defined = defined;
             this.used = used;
         }
     }
 
-    private Map<String, ResolverEntry> lastPoppedScope = null;
+    private static class StackEntry {
+        public String name;
+        public ResolverEntry entry;
 
-    private final Interpreter interpreter;
-    private final Stack<Map<String, ResolverEntry>> scopes = new Stack<>();
-    private FunctionType currentFunction = FunctionType.NONE;
-
-    public Resolver(Interpreter interpreter) {
-        this.interpreter = interpreter;
+        StackEntry(String name, ResolverEntry entry) {
+            this.name = name;
+            this.entry = entry;
+        }
     }
 
+    private List<StackEntry> lastPoppedScope = null;
+
+    private final Stack<List<StackEntry>> scopes = new Stack<>();
+    private FunctionType currentFunction = FunctionType.NONE;
+
     private void beginScope() {
-        scopes.push(new HashMap<>());
+        scopes.push(new ArrayList<>());
     }
 
     public void resolve(List<Stmt> statements) throws Exception {
@@ -68,11 +69,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private void checkUnusedLocals(Token ignore) {
         if (lastPoppedScope != null) {
-            Map<String, ResolverEntry> scope = lastPoppedScope;
-            for (String key : scope.keySet()) {
-                ResolverEntry entry = scope.get(key);
-                if (entry.token != ignore && !entry.used) {
-                    System.err.printf("[line %d] local variable '%s' is unused.\n", entry.token.line(), entry.token.lexeme());
+            List<StackEntry> scope = lastPoppedScope;
+            for (StackEntry se : scope) {
+                if (se.entry.token != ignore && !se.entry.used) {
+                    System.err.printf("[line %d] local variable '%s' is unused.\n", se.entry.token.line(), se.entry.token.lexeme());
                 }
             }
         }
@@ -80,29 +80,43 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private void define(Token name) {
         if (scopes.isEmpty()) return;
-        ResolverEntry entry = scopes.peek().get(name.lexeme());
+        StackEntry entry = getByName(name.lexeme());
         if (entry != null) {
-            entry.defined = true;
+            entry.entry.defined = true;
         }
+    }
+
+    private StackEntry getByName(String name) {
+        List<StackEntry> top = scopes.peek();
+        for (StackEntry se : top) {
+            if (se.entry.token.lexeme().equals(name)) {
+                return se;
+            }
+        }
+        return null;
     }
 
     private void declare(Token name) {
         if (scopes.isEmpty()) return;
 
-        Map<String, ResolverEntry> scope = scopes.peek();
-        if (scope.containsKey(name.lexeme())) {
+        if (getByName(name.lexeme()) != null) {
             Lox.error(name, "Already a variable with this name in this scope.");
         }
-
-        scope.put(name.lexeme(), new ResolverEntry(name, false, false));
+        List<StackEntry> scope = scopes.peek();
+        scope.add(new StackEntry(name.lexeme(), new ResolverEntry(name, false, false)));
     }
 
     private void resolveLocal(Expr expr, Token name) {
         for (int i = scopes.size() - 1; i >= 0; --i) {
-            Map<String, ResolverEntry> scope = scopes.get(i);
-            if (scope.containsKey(name.lexeme())) {
-                scope.get(name.lexeme()).used = true;
-                interpreter.resolve(expr, scopes.size() - 1 - i);
+            List<StackEntry> scope = scopes.get(i);
+            for (int idx = 0; idx < scope.size(); ++idx) {
+                StackEntry se = scope.get(idx);
+                if (se.name.equals(name.lexeme())) {
+                    se.entry.used = true;
+                    ((Expr.Variable)expr).idx = idx;
+                    ((Expr.Variable)expr).depth = scopes.size() - 1 - i;
+                    return;
+                }
             }
         }
     }
@@ -153,7 +167,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitLiteralExpr(Expr.Literal expr) throws Exception {
+    public Void visitLiteralExpr(Expr.Literal expr)  {
         return null;
     }
 
@@ -186,11 +200,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitVariableExpr(Expr.Variable expr) throws Exception {
+    public Void visitVariableExpr(Expr.Variable expr) {
         if (!scopes.isEmpty()) {
-            ResolverEntry entry = scopes.peek().get(expr.name.lexeme());
-            if (entry != null && entry.defined == Boolean.FALSE) {
-                Lox.error(expr.name, "Can't read local variable in its own initializer.");
+            StackEntry se = getByName(expr.name.lexeme());
+            if (se != null) {
+                if (se.entry != null && se.entry.defined == Boolean.FALSE) {
+                    Lox.error(expr.name, "Can't read local variable in its own initializer.");
+                }
             }
         }
 
@@ -280,12 +296,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitBreakStmt(Stmt.Break stmt) throws ControlFlowChange {
+    public Void visitBreakStmt(Stmt.Break stmt) {
         return null;
     }
 
     @Override
-    public Void visitContinueStmt(Stmt.Continue stmt) throws ControlFlowChange {
+    public Void visitContinueStmt(Stmt.Continue stmt) {
         return null;
     }
 }
