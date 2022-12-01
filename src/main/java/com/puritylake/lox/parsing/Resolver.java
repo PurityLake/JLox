@@ -113,8 +113,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 StackEntry se = scope.get(idx);
                 if (se.name.equals(name.lexeme())) {
                     se.entry.used = true;
-                    ((Expr.Variable)expr).idx = idx;
-                    ((Expr.Variable)expr).depth = scopes.size() - 1 - i;
+                    if (expr instanceof Expr.Variable var) {
+                        var.idx = idx;
+                        var.depth = scopes.size() - 1 - i;
+                    }
                     return;
                 }
             }
@@ -137,6 +139,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private void resolveClass(Stmt.Class klass) throws Exception {
         beginScope();
+        scopes.peek().add(new StackEntry("this",
+                new ResolverEntry(
+                        new Token(TokenType.THIS, "this", null, klass.name.line()),
+                        true,
+                        true
+                )));
         for (Stmt.Function func :  klass.methods) {
             resolveFunction(func, FunctionType.METHOD);
         }
@@ -196,6 +204,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitSetExpr(Expr.Set expr) throws Exception {
         resolve(expr.value);
         resolve(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitThisExpr(Expr.This expr) throws Exception {
+        resolveLocal(expr, expr.keyword);
         return null;
     }
 

@@ -31,6 +31,17 @@ public class Environment {
         return namedValues.get(name).value;
     }
 
+    public Object tryGet(String name) {
+        Environment env = this;
+        while (env != null) {
+            if (env.namedValues.containsKey(name)) {
+                return env.namedValues.get(name).value;
+            }
+            env = env.enclosing;
+        }
+        return null;
+    }
+
     public Object getAt(int distance, int idx) {
         return ancestor(distance).indexedValues.get(idx).value;
     }

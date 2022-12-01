@@ -18,6 +18,7 @@ public abstract class Expr {
         R visitLiteralExpr(Literal expr) throws Exception;
         R visitLogicalExpr(Logical expr) throws Exception;
         R visitSetExpr(Set expr) throws Exception;
+        R visitThisExpr(This expr) throws Exception;
         R visitUnaryExpr(Unary expr) throws Exception;
         R visitCommaGroupExpr(CommaGroup expr) throws Exception;
         R visitTernaryExpr(Ternary expr) throws Exception;
@@ -141,6 +142,18 @@ public abstract class Expr {
         public final Expr object;
         public final Token name;
         public final Expr value;
+    }
+    public static class This extends Expr {
+       public This(Token keyword) {
+            this.keyword = keyword;
+        }
+
+        @Override
+        public <R> R accept(Visitor<R> visitor) throws Exception {
+            return visitor.visitThisExpr(this);
+        }
+
+        public final Token keyword;
     }
     public static class Unary extends Expr {
        public Unary(Token operator, Expr right) {

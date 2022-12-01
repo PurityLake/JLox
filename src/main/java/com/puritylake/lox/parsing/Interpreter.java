@@ -248,6 +248,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitThisExpr(Expr.This expr) throws Exception {
+        return lookUpVariable(expr.keyword, expr);
+    }
+
+    @Override
     public Object visitUnaryExpr(Expr.Unary expr) throws Exception {
         Object right = evaluate(expr.right);
 
@@ -285,12 +290,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     private Object lookUpVariable(Token name, Expr expr) {
-        Expr.Variable var = (Expr.Variable)expr;
-        if (var.depth != -1) {
-            return environment.getAt(var.depth, ((Expr.Variable)expr).idx);
-        } else {
-            return globals.get(name.lexeme());
+        if (expr instanceof Expr.Variable var) {
+            var = (Expr.Variable) expr;
+            if (var.depth != -1) {
+                return environment.getAt(var.depth, ((Expr.Variable) expr).idx);
+            }
         }
+        Object obj = environment.tryGet(name.lexeme());
+        if (obj != null) {
+            return obj;
+        }
+        return globals.get(name.lexeme());
     }
 
     @Override
