@@ -3,6 +3,7 @@ package com.puritylake.lox.parsing;
 import com.puritylake.lox.Lox;
 import com.puritylake.lox.types.LoxCallable;
 import com.puritylake.lox.exceptions.ControlFlowChange;
+import com.puritylake.lox.types.LoxClass;
 import com.puritylake.lox.types.LoxFunction;
 
 import java.util.ArrayList;
@@ -274,6 +275,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitBlockStmt(Stmt.Block stmt) throws Exception {
         executeBlock(stmt.statements, new Environment(environment));
+        return null;
+    }
+
+    @Override
+    public Void visitClassStmt(Stmt.Class stmt) throws Exception {
+        LoxClass klass = new LoxClass(stmt.name.lexeme());
+        environment.defineIdx(klass,true);
         return null;
     }
 

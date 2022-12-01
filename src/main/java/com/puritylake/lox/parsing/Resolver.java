@@ -135,6 +135,16 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         currentFunction = enclosingFunction;
     }
 
+    private void resolveClass(Stmt.Class klass) throws Exception {
+        beginScope();
+        for (Stmt.Function func :  klass.methods) {
+            declare(func.name);
+            define(func.name);
+            resolveFunction(func, FunctionType.FUNCTION);
+        }
+        endScope(klass.name);
+    }
+
     @Override
     public Void visitAssignExpr(Expr.Assign expr) throws Exception {
         resolve(expr.value);
@@ -225,6 +235,16 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         beginScope();
         resolveBlock(stmt.statements);
         endScope(null);
+        return null;
+    }
+
+    @Override
+    public Void visitClassStmt(Stmt.Class stmt) throws Exception {
+        declare(stmt.name);
+        define(stmt.name);
+
+        resolveClass(stmt);
+
         return null;
     }
 

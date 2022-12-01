@@ -1,28 +1,3 @@
-var a = 10;
-
-var f = fun () {
-    print a;
-};
-
-fun main() {
-    fun printA() {
-        print a;
-    }
-    printA();
-    var a = 20;
-    {
-        var a = 30;
-        print a;
-    }
-    {
-        var a = 40;
-        print a;
-    }
-    printA();
-    print a;
-}
-
-f();
-
-main();
-print "end";
+class Bagel {}
+var bagel = Bagel();
+print bagel;
