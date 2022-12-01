@@ -13,8 +13,20 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         NONE, FUNCTION
     }
 
+    private static class ResolverEntry {
+        public Boolean defined;
+        public Boolean used;
+        public final Token token;
+
+        public ResolverEntry(Token token, Boolean defined, Boolean used) {
+            this.token = token;
+            this.defined = defined;
+            this.used = used;
+        }
+    }
+
     private final Interpreter interpreter;
-    private final Stack<Map<String, Boolean>> scopes = new Stack<>();
+    private final Stack<Map<String, ResolverEntry>> scopes = new Stack<>();
     private FunctionType currentFunction = FunctionType.NONE;
 
     public Resolver(Interpreter interpreter) {
@@ -29,6 +41,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         for (Stmt statement : statements) {
             resolve(statement);
         }
+        checkUnusedLocals(null);
+    }
+
+    private void resolveBlock(List<Stmt> statements) throws Exception {
+        for (Stmt statement : statements) {
+            resolve(statement);
+        }
     }
 
     private void resolve(Stmt statement) throws Exception {
@@ -39,30 +58,48 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         expr.accept(this);
     }
 
-    private void endScope() {
+    private void endScope(Token ignore) {
+        checkUnusedLocals(ignore);
         scopes.pop();
+    }
+
+    private void checkUnusedLocals(Token ignore) {
+        if (!scopes.isEmpty()) {
+            Map<String, ResolverEntry> scope = scopes.peek();
+            for (String key : scope.keySet()) {
+                ResolverEntry entry = scope.get(key);
+                if ((ignore != null && entry.token != ignore) && !entry.used) {
+                    System.err.printf("[line %d] local variable '%s' is unused.\n", entry.token.line(), entry.token.lexeme());
+                }
+            }
+        }
     }
 
     private void define(Token name) {
         if (scopes.isEmpty()) return;
-        scopes.peek().put(name.lexeme(), true);
+        ResolverEntry entry = scopes.peek().get(name.lexeme());
+        if (entry != null) {
+            entry.defined = true;
+        }
     }
 
     private void declare(Token name) {
         if (scopes.isEmpty()) return;
 
-        Map<String, Boolean> scope = scopes.peek();
+        Map<String, ResolverEntry> scope = scopes.peek();
         if (scope.containsKey(name.lexeme())) {
             Lox.error(name, "Already a variable with this name in this scope.");
         }
 
-        scope.put(name.lexeme(), false);
+        scope.put(name.lexeme(), new ResolverEntry(name, false, false));
     }
 
     private void resolveLocal(Expr expr, Token name) {
         for (int i = scopes.size() - 1; i >= 0; --i) {
-            if (scopes.get(i).containsKey(name.lexeme())) {
-                interpreter.resolve(expr, scopes.size() -1 - i);
+            Map<String, ResolverEntry> scope = scopes.get(i);
+            if (scope.containsKey(name.lexeme())) {
+                scope.get(name.lexeme()).used = true;
+                interpreter.resolve(expr, scopes.size() - 1 - i);
             }
         }
     }
@@ -76,8 +113,8 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             declare(param);
             define(param);
         }
-        resolve(function.body);
-        endScope();
+        resolveBlock(function.body);
+        endScope(function.name);
         currentFunction = enclosingFunction;
     }
 
@@ -147,8 +184,11 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitVariableExpr(Expr.Variable expr) throws Exception {
-        if (!scopes.isEmpty() && scopes.peek().get(expr.name.lexeme()) == Boolean.FALSE) {
-            Lox.error(expr.name, "Can't read local variable in its own intializer.");
+        if (!scopes.isEmpty()) {
+            ResolverEntry entry = scopes.peek().get(expr.name.lexeme());
+            if (entry != null && entry.defined == Boolean.FALSE) {
+                Lox.error(expr.name, "Can't read local variable in its own initializer.");
+            }
         }
 
         resolveLocal(expr, expr.name);
@@ -164,8 +204,8 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitBlockStmt(Stmt.Block stmt) throws Exception {
         beginScope();
-        resolve(stmt.statements);
-        endScope();
+        resolveBlock(stmt.statements);
+        endScope(null);
         return null;
     }
 
@@ -232,7 +272,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         resolve(stmt.cond);
         resolve(stmt.post);
         resolve(stmt.body);
-        endScope();
+        endScope(null);
         return null;
     }
 

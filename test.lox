@@ -1,3 +1,5 @@
+print "here";
+
 var a = 10;
 
 fun main() {
@@ -7,6 +9,7 @@ fun main() {
     printA();
     var a = 20;
     printA();
+    print a;
 }
 
 main();
